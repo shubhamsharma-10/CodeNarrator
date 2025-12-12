@@ -58,8 +58,13 @@ export async function getRepoMetadata(owner: string, repo: string): Promise<Repo
       throw new Error("Repository not found.  Make sure it's a public repository.");
     }
     if (response.status === 403) {
-      throw new Error("API rate limit exceeded. Please try again later.");
-    }
+        const remaining = response.headers. get("x-ratelimit-remaining");
+        const retryAfter = response.headers.get("retry-after");
+        if (remaining === "0" || retryAfter) {
+            throw new Error("API rate limit exceeded.  Please try again later.");
+  }
+  throw new Error("Access forbidden (private repo, missing permissions, or abuse protection).");
+}
     throw new Error(`Failed to fetch repository: ${response. statusText}`);
   }
 
@@ -84,7 +89,7 @@ export async function getRepoMetadata(owner: string, repo: string): Promise<Repo
 // Fetch file tree
 export async function getFileTree(owner: string, repo: string, branch: string): Promise<FileNode[]> {
   const response = await fetch(
-    `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees/${branch}? recursive=1`,
+    `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
     { headers: getHeaders() }
   );
 
@@ -119,7 +124,7 @@ export async function getLanguages(owner: string, repo: string): Promise<Languag
 
   // Convert bytes to percentages
   const total = Object.values(data).reduce((sum:  number, bytes) => sum + (bytes as number), 0);
-
+  if (! total) return {};
   const percentages: LanguageBreakdown = {};
   for (const [lang, bytes] of Object.entries(data)) {
     percentages[lang] = Math.round(((bytes as number) / total) * 100 * 10) / 10;
@@ -140,9 +145,18 @@ export async function getFileContent(owner:  string, repo: string, path: string)
 
   const data = await response.json();
 
-  if (data. encoding === "base64" && data.content) {
-    return Buffer. from(data.content, "base64").toString("utf-8");
+  if (data.encoding === "base64" && data.content) {
+  try {
+    const binaryString = atob(data.content. replace(/\n/g, ""));
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString. length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return new TextDecoder("utf-8").decode(bytes);
+  } catch {
+    return null;
   }
+}
 
   return null;
 }
@@ -162,15 +176,12 @@ export async function analyzeRepository(owner: string, repo:  string): Promise<R
   const keyFileNames = ["README.md", "readme.md", "package.json", "requirements.txt", "Cargo.toml", "go.mod"];
   const keyFiles:  { [filename: string]: string } = {};
 
-  for (const fileName of keyFileNames) {
-    const fileExists = files.some((f) => f.path. toLowerCase() === fileName.toLowerCase());
-    if (fileExists) {
-      const content = await getFileContent(owner, repo, fileName);
-      if (content) {
-        keyFiles[fileName] = content. slice(0, 5000); // Limit content size
-      }
-    }
-  }
+  await Promise.all(
+  keyFileNames.map(async (fileName) => {
+    const content = await getFileContent(owner, repo, fileName);
+    if (content) keyFiles[fileName] = content.slice(0, 5000);
+  })
+);
 
   return {
     metadata,

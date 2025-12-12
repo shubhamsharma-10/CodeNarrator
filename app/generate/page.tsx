@@ -68,6 +68,13 @@ const handleSubmit = async (e: React. FormEvent) => {
     return;
   }
 
+   const parsed = parseGitHubUrl(url);
+  if (!parsed) {
+    setError("Please enter a valid GitHub repository URL");
+    return;
+  }
+
+
   setIsValidating(true);
 
   try {
@@ -75,19 +82,22 @@ const handleSubmit = async (e: React. FormEvent) => {
       method: "POST",
       headers: { "Content-Type":  "application/json" },
       body:  JSON.stringify({
-        owner:  repoInfo?. owner,
-        repo: repoInfo?.repo,
+        owner:  parsed.owner,
+        repo: parsed.repo,
       }),
     });
 
-    const data = await response.json();
+    const raw = await response.text();
+    const data = raw ?  (() => { try { return JSON. parse(raw); } catch { return { error: raw }; } })() : {};
 
     if (!response.ok) {
       throw new Error(data.error || "Failed to analyze repository");
     }
 
     // For now, log the data - we'll use this in the next issue
-    console.log("Repository Analysis:", data);
+   if (process.env. NODE_ENV !== "production") {
+  console.log("Repository Analysis:", data);
+}
     
     // Store in sessionStorage for the next page (we'll build this later)
     sessionStorage.setItem("repoAnalysis", JSON.stringify(data));
