@@ -102,11 +102,7 @@ const handleSubmit = async (e: React. FormEvent) => {
     // Store in sessionStorage for the next page (we'll build this later)
     sessionStorage.setItem("repoAnalysis", JSON.stringify(data));
     
-    alert(`✅ Successfully analyzed ${data.metadata.fullName}!\n\n` +
-      `⭐ Stars: ${data.metadata.stars}\n` +
-      `📁 Files: ${data.files.length}\n` +
-      `💻 Languages: ${Object.keys(data.languages).join(", ")}\n\n` +
-      `Next step: Generate documentation (coming in Issue #4)`);
+  window.location.href = "/generate/results";
 
   } catch (err) {
     const message = err instanceof Error ?  err.message : "Failed to analyze repository";
