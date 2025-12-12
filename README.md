@@ -1,4 +1,4 @@
-# 🤖 RepoDoc AI
+🤖 CodeNarrator
 
 > Turn any GitHub repository into beautiful documentation in seconds! 
 
@@ -36,15 +36,15 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/shubhamsharma-10/repodoc-ai. git
-cd repodoc-ai
+git clone https://github.com/shubhamsharma-10/CodeNarrator. git
+cd CodeNarrator
 
 # Install dependencies
 npm install
 
 # Set up environment variables
-cp .env.example .env. local
-# Edit .env. local with your API keys
+cp .env.example .env.local
+# Edit .env.local with your API keys
 
 # Run development server
 npm run dev
@@ -62,7 +62,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 ## 📁 Project Structure
 
 ```
-repodoc-ai/
+CodeNarrator/
 ├── app/
 │   ├── api/
 │   │   ├── analyze/      # GitHub repo analysis

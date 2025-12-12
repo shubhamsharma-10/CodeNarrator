@@ -9,10 +9,10 @@ export default function Home() {
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <FileText className="w-8 h-8 text-blue-500" />
-          <span className="text-xl font-bold text-white">RepoDoc AI</span>
+           <span className="text-xl font-bold text-white">CodeNarrator</span>
         </div>
         <a
-          href="https://github.com/shubhamsharma-10/repodoc-ai"
+          href="https://github.com/shubhamsharma-10/CodeNarrator"
           target="_blank"
           rel="noopener noreferrer"
           className="text-slate-400 hover:text-white transition-colors"
@@ -40,14 +40,14 @@ export default function Home() {
 
           {/* Subheadline */}
           <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-            RepoDoc AI analyzes your GitHub repository and generates
+            CodeNarrator analyzes your GitHub repository and generates
             professional documentation in seconds.  README, API docs,
             setup guides — all with one click.
           </p>
 
           {/* CTA Button */}
           <Link href="/generate">
-            <Button size="lg" className="text-lg px-8 py-6 bg-blue-600 hover: bg-blue-700">
+            <Button size="lg" className="text-lg px-8 py-6 bg-blue-600 hover:bg-blue-700">
               Generate Docs Now
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
