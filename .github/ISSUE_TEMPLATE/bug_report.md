@@ -3,7 +3,7 @@ name: 🐛 Bug Report
 about: Report a bug to help us improve
 title: '[BUG] '
 labels: bug
-assignees:  shubhamsharma-10
+assignees: shubhamsharma-10
 ---
 
 ## 🐛 Bug Description

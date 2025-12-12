@@ -2,7 +2,7 @@
 Brief description of changes.
 
 ## 🔗 Related Issue
-Closes #(issue number)
+Closes #123
 
 ## 🔄 Type of Change
 - [ ] 🐛 Bug fix

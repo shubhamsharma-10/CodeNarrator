@@ -17,7 +17,15 @@ We pledge to make participation in our project a harassment-free experience for 
 
 ## Enforcement
 
-Project maintainers will remove, edit, or reject contributions that violate this Code of Conduct.
+Project maintainers will remove, edit, or reject contributions that violate this Code of Conduct. 
+
+### Reporting
+
+If you experience or witness unacceptable behavior, please report it by: 
+- **Email:** shubhamsharma10. dev@gmail.com (or your actual email)
+- **GitHub:** Open an issue with the label `conduct`
+
+All reports will be handled confidentially.
 
 ## Attribution
 

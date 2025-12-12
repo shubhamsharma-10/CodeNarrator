@@ -49,10 +49,10 @@ Before you begin, ensure you have the following installed:
 
 2. **Set up environment variables:**
    ```bash
-   cp .env.example . env.local
+   cp .env.example .env.local
    ```
    Then edit `.env.local` and add your API keys:
-   ```
+   ```dotenv
    GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key_here
    ```
 
