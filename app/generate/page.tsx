@@ -22,7 +22,7 @@ function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
     if (parts.length >= 2) {
       return {
         owner:  parts[0],
-        repo: parts[1]. replace(/\. git$/, ""),
+        repo: parts[1].replace(/\.git$/, ""),
       };
     }
     return null;
@@ -59,35 +59,62 @@ export default function GeneratePage() {
     }
   };
 
-  const handleSubmit = async (e:  React.FormEvent) => {
-    e.preventDefault();
-    
-    // Clear any previous errors
-    setError(null);
-    
-    if (!isValidGitHubUrl(url)) {
-      setError("Please enter a valid GitHub repository URL");
-      return;
+const handleSubmit = async (e: React. FormEvent) => {
+  e.preventDefault();
+  setError(null);
+
+  if (!isValidGitHubUrl(url)) {
+    setError("Please enter a valid GitHub repository URL");
+    return;
+  }
+
+   const parsed = parseGitHubUrl(url);
+  if (!parsed) {
+    setError("Please enter a valid GitHub repository URL");
+    return;
+  }
+
+
+  setIsValidating(true);
+
+  try {
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type":  "application/json" },
+      body:  JSON.stringify({
+        owner:  parsed.owner,
+        repo: parsed.repo,
+      }),
+    });
+
+    const raw = await response.text();
+    const data = raw ?  (() => { try { return JSON. parse(raw); } catch { return { error: raw }; } })() : {};
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to analyze repository");
     }
 
-    setIsValidating(true);
+    // For now, log the data - we'll use this in the next issue
+   if (process.env. NODE_ENV !== "production") {
+  console.log("Repository Analysis:", data);
+}
+    
+    // Store in sessionStorage for the next page (we'll build this later)
+    sessionStorage.setItem("repoAnalysis", JSON.stringify(data));
+    
+    alert(`✅ Successfully analyzed ${data.metadata.fullName}!\n\n` +
+      `⭐ Stars: ${data.metadata.stars}\n` +
+      `📁 Files: ${data.files.length}\n` +
+      `💻 Languages: ${Object.keys(data.languages).join(", ")}\n\n` +
+      `Next step: Generate documentation (coming in Issue #4)`);
 
-    try {
-      // TODO: Will be implemented in next PR - API integration
-      // For now, simulate a delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // Placeholder for next feature
-      console.log("Generating docs for:", repoInfo);
-      alert(`Ready to generate docs for:  ${repoInfo?. owner}/${repoInfo?.repo}\n\nThis feature will be implemented in the next PR! `);
-      
-    } catch (err) {
-      setError("Failed to analyze repository. Please try again.");
-      console.error(err);
-    } finally {
-      setIsValidating(false);
-    }
-  };
+  } catch (err) {
+    const message = err instanceof Error ?  err.message : "Failed to analyze repository";
+    setError(message);
+  } finally {
+    setIsValidating(false);
+  }
+};
 
 
   const handleExampleClick = (exampleUrl: string) => {
