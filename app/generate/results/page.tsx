@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import { useCompletion } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Copy, Download, Check, Loader2, FileText, Book, Code, Users } from "lucide-react";
+import { ArrowLeft, Copy, Download, Check, Loader2, FileText, Book, Code, Users, Eye, FileCode } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import Link from "next/link";
 
 const DOC_TYPES = [
@@ -18,10 +21,11 @@ export default function ResultsPage() {
   const [selectedDocType, setSelectedDocType] = useState("readme");
   const [copied, setCopied] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [viewMode, setViewMode] = useState<"preview" | "raw">("preview");
 
   const { completion, isLoading, complete } = useCompletion({
     api: "/api/generate",
-     streamProtocol: "text",
+    streamProtocol: "text",
   });
 
   useEffect(() => {
@@ -32,7 +36,7 @@ export default function ResultsPage() {
   }, []);
 
   const handleGenerate = async () => {
-    if (! repoAnalysis) return;
+    if (!repoAnalysis) return;
     setGenerated(true);
     await complete("", {
       body: {
@@ -49,7 +53,7 @@ export default function ResultsPage() {
   };
 
   const handleDownload = () => {
-    const blob = new Blob([completion], { type:  "text/markdown" });
+    const blob = new Blob([completion], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -58,7 +62,7 @@ export default function ResultsPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (! repoAnalysis) {
+  if (!repoAnalysis) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -80,7 +84,7 @@ export default function ResultsPage() {
           <span>Back</span>
         </Link>
         <div className="text-white font-semibold">
-          {repoAnalysis. metadata.fullName}
+          {repoAnalysis.metadata.fullName}
         </div>
       </nav>
 
@@ -91,7 +95,7 @@ export default function ResultsPage() {
             <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
               <h3 className="text-white font-semibold mb-4">Documentation Type</h3>
               <div className="space-y-2">
-                {DOC_TYPES. map((docType) => {
+                {DOC_TYPES.map((docType) => {
                   const Icon = docType.icon;
                   return (
                     <button
@@ -100,17 +104,16 @@ export default function ResultsPage() {
                         setSelectedDocType(docType.id);
                         setGenerated(false);
                       }}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        selectedDocType === docType.id
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
-                      }`}
+                      className={`w-full text-left p-3 rounded-lg transition-colors ${selectedDocType === docType.id
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-700/50 text-slate-300 hover:bg-slate-700"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <Icon className="w-5 h-5" />
                         <div>
                           <div className="font-medium">{docType.label}</div>
-                          <div className="text-xs opacity-70">{docType. description}</div>
+                          <div className="text-xs opacity-70">{docType.description}</div>
                         </div>
                       </div>
                     </button>
@@ -123,7 +126,7 @@ export default function ResultsPage() {
                 disabled={isLoading}
                 className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
               >
-                {isLoading ?  (
+                {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Generating...
@@ -144,15 +147,15 @@ export default function ResultsPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Forks</span>
-                  <span className="text-white">{repoAnalysis. metadata.forks}</span>
+                  <span className="text-white">{repoAnalysis.metadata.forks}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Language</span>
-                  <span className="text-white">{repoAnalysis. metadata.language || "N/A"}</span>
+                  <span className="text-white">{repoAnalysis.metadata.language || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>License</span>
-                  <span className="text-white">{repoAnalysis. metadata.license || "N/A"}</span>
+                  <span className="text-white">{repoAnalysis.metadata.license || "N/A"}</span>
                 </div>
               </div>
             </div>
@@ -164,25 +167,50 @@ export default function ResultsPage() {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-700">
                 <h2 className="text-white font-semibold">
-                  {DOC_TYPES. find((d) => d.id === selectedDocType)?.label} Preview
+                  {DOC_TYPES.find((d) => d.id === selectedDocType)?.label} Preview
                 </h2>
-                {completion && (
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCopy}>
-                      {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
-                      {copied ? "Copied!" : "Copy"}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleDownload}>
-                      <Download className="w-4 h-4 mr-1" />
-                      Download
-                    </Button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  {/* View Mode Toggle */}
+                  {completion && (
+                    <>
+                      <div className="flex bg-slate-700 rounded-lg p-1 mr-2">
+                        <button
+                          onClick={() => setViewMode("preview")}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm transition-colors ${viewMode === "preview"
+                            ? "bg-blue-600 text-white"
+                            : "text-slate-400 hover:text-white"
+                            }`}
+                        >
+                          <Eye className="w-4 h-4" />
+                          Preview
+                        </button>
+                        <button
+                          onClick={() => setViewMode("raw")}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded text-sm transition-colors ${viewMode === "raw"
+                            ? "bg-blue-600 text-white"
+                            : "text-slate-400 hover:text-white"
+                            }`}
+                        >
+                          <FileCode className="w-4 h-4" />
+                          Raw
+                        </button>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={handleCopy}>
+                        {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                        {copied ? "Copied!" : "Copy"}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleDownload}>
+                        <Download className="w-4 h-4 mr-1" />
+                        Download
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Content */}
-              <div className="p-4 min-h-[500px]">
-                {! generated && ! completion && (
+              <div className="p-6 min-h-[500px]">
+                {!generated && !completion && (
                   <div className="flex items-center justify-center h-96 text-slate-500">
                     <div className="text-center">
                       <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -191,7 +219,7 @@ export default function ResultsPage() {
                   </div>
                 )}
 
-                {isLoading && ! completion && (
+                {isLoading && !completion && (
                   <div className="flex items-center justify-center h-96">
                     <div className="text-center">
                       <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-blue-500" />
@@ -200,11 +228,17 @@ export default function ResultsPage() {
                   </div>
                 )}
 
-                {completion && (
-                  <div className="prose prose-invert max-w-none">
-                    <pre className="whitespace-pre-wrap text-sm text-slate-300 font-mono bg-slate-900 p-4 rounded-lg overflow-auto">
+                {completion && viewMode === "raw" && (
+                  <pre className="whitespace-pre-wrap text-sm text-slate-300 font-mono bg-slate-900 p-4 rounded-lg overflow-auto">
+                    {completion}
+                  </pre>
+                )}
+
+                {completion && viewMode === "preview" && (
+                  <div className="markdown-preview">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                       {completion}
-                    </pre>
+                    </ReactMarkdown>
                   </div>
                 )}
               </div>
