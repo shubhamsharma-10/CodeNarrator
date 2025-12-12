@@ -1,0 +1,9 @@
+language: "en"
+reviews:
+  auto_review: 
+    enabled: true
+  request_changes_workflow:  true
+  high_level_summary: true
+  poem: true
+chat:
+  auto_reply: true
