@@ -22,7 +22,7 @@ Project maintainers will remove, edit, or reject contributions that violate this
 ### Reporting
 
 If you experience or witness unacceptable behavior, please report it by: 
-- **Email:** shubhamsharma10. dev@gmail.com (or your actual email)
+- **Email:** shubhamsharma10403@gmail.com
 - **GitHub:** Open an issue with the label `conduct`
 
 All reports will be handled confidentially.
